@@ -1,0 +1,60 @@
+cmake_minimum_required(VERSION 3.10)
+
+# Set your project name here
+project(Eventarium)
+
+IF (WIN32)
+  set(CMAKE_DEBUG_POSTFIX "d")
+  set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+ENDIF (WIN32)
+
+# Require C++11
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+
+# Glob the files
+file(GLOB_RECURSE SOURCES "src/*.cpp")
+file(GLOB_RECURSE HEADERS "include/*.h")
+
+# Include directories
+include_directories(
+		${CMAKE_CURRENT_SOURCE_DIR}/include
+	)
+# Add the library
+add_library(
+		eventariumlib
+		${SOURCES}
+		${HEADERS}
+	)
+target_link_libraries(
+    eventariumlib
+)
+
+# Add the demo executables	
+add_executable(
+		demo_single
+		${CMAKE_CURRENT_SOURCE_DIR}/demos/demo_single.cpp
+	)
+target_link_libraries(
+		demo_single
+		eventariumlib
+	)
+	
+add_executable(
+		demo_broadcast
+		${CMAKE_CURRENT_SOURCE_DIR}/demos/demo_broadcast.cpp
+	)
+target_link_libraries(
+		demo_broadcast
+		eventariumlib
+	)
+	
+IF (MSVC)
+	set_target_properties(demo_single PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/demos)
+    set_target_properties(demo_single PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/demos)
+    set_target_properties(demo_single PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_SOURCE_DIR}/demos)
+    
+	set_target_properties(demo_broadcast PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/demos)
+	set_target_properties(demo_broadcast PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/demos)
+	set_target_properties(demo_broadcast PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_SOURCE_DIR}/demos)
+ENDIF (MSVC)
