@@ -5,11 +5,11 @@ Eventarium is designed to offer a straightforward and efficient means to manage 
 ## Overview
 This library was originally created as an exercise to create something similar to [Unreal Engine's delegate system](https://benui.ca/unreal/delegates-advanced/), but in a more modern way and a more portable and lightweight approach. I found myself using it in a few projects, so I decided to put it here.
 
-Eventarium introduces two main classes: `evSingleEvent` and `evBroadcastEvent`. `evSingleEvent` allows for a single subscriber to an event, making it ideal for one-to-one notifications. On the other hand, `evBroadcastEvent` supports multiple subscribers, allowing for a one-to-many notification pattern. The system is built using modern C++11 features, making it compatible with a wide range of platforms and projects. It's header-only, which means integrating it into your project is as simple as including the relevant files (or build using CMake, whichever you prefer). Eventarium doesn't rely on any third-party libraries, keeping your project lightweight and reducing dependencies.
+Eventarium introduces two main classes: `evSingleEvent` and `evBroadcastEvent`. [`evSingleEvent`](docs/evSingleEvent.md) allows for a single subscriber to an event, making it ideal for one-to-one notifications. On the other hand, [`evBroadcastEvent`](docs/evBroadcastEvent.md) supports multiple subscribers, allowing for a one-to-many notification pattern. The system is built using modern C++11 features, making it compatible with a wide range of platforms and projects. It's header-only, which means integrating it into your project is as simple as including the relevant files (or build using CMake, whichever you prefer). Eventarium doesn't rely on any third-party libraries, keeping your project lightweight and reducing dependencies.
 
 ## Usage and Implementation
 Eventarium has two ways to use its event handling capabilities:
-1. **(Recommended)** Macro usage with `evDECLARE...`macros: This method is recommended for most users as it reduces boilerplate code, making your event management cleaner and more maintainable.
+1. **(Recommended)** [Macro usage with `evDECLARE...`macros](docs/Macros.md): This method is recommended for most users as it reduces boilerplate code, making your event management cleaner and more maintainable.
 2. Direct usage by subclassing or creating templated objects from `evSingleEvent` or `evBroadcastEvent`: This approach offers more control and is straightforward, suitable for those who prefer explicit class management.
 
 | :exclamation:  Check out [demos/demo_single.cpp](demos/demo_single.cpp) and [demos/demo_broadcast.cpp](demos/demo_broadcast.cpp) for samples |
