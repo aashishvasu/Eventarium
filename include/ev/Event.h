@@ -3,6 +3,8 @@
 #ifndef EVENT_H
 #define EVENT_H
 
+#include "ev/Enums.h"
+
 #include <functional>
 #include <unordered_map>
 
@@ -16,6 +18,9 @@ public:
 	virtual ~IEvent() = default;
 	virtual bool IsBound() = 0;
 	virtual void Unbind() = 0;
+	virtual void Pause() = 0;
+	virtual void Resume() = 0;
+	virtual EventStatus GetStatus() const = 0;
 };
 
 /*
@@ -32,7 +37,16 @@ public:
 	bool IsBound() override;
 
 	// Unbinds the currently bound function, if any.
-	void Unbind() override;
+	void Unbind() override;	
+
+	// Pauses the event. Will not call the subscriber
+	void Pause() override;
+	
+	// Unpauses the event. Will call the subscriber after this is called
+	void Resume() override;
+
+	// Get current status of the event
+	EventStatus GetStatus() const override;
 
 	// Executes the bound function if one is bound.
 	void Execute(Args... args);
@@ -42,6 +56,7 @@ public:
 	
 private:
 	std::function<void(Args...)> func = nullptr;
+	EventStatus status = EventStatus::ES_UNBOUND;
 };
 
 // Definitions
@@ -49,19 +64,21 @@ template <typename ... Args>
 void evSingleEvent<Args...>::Bind(std::function<void(Args...)> f)
 {
 	func = f;
+	status = EventStatus::ES_ACTIVE;
 }
 
 template <typename ... Args>
 void evSingleEvent<Args...>::Execute(Args... args)
 {
-	if (IsBound())
+	if (IsBound() && status == EventStatus::ES_ACTIVE)
 		func(args...);
 }
 
 template <typename ... Args>
 void evSingleEvent<Args...>::ExecuteUnchecked(Args... args)
 {
-	func(args...);
+	if(status == EventStatus::ES_ACTIVE)
+		func(args...);
 }
 
 template <typename ... Args>
@@ -74,6 +91,27 @@ template <typename ... Args>
 void evSingleEvent<Args...>::Unbind()
 {
 	func = nullptr;
+	status = EventStatus::ES_UNBOUND;
+}
+
+template <typename ... Args>
+void evSingleEvent<Args...>::Pause()
+{
+	if (status == IEvent<Args...>::EventStatus::Active)
+		status = IEvent<Args...>::EventStatus::Paused;
+}
+
+template <typename ... Args>
+void evSingleEvent<Args...>::Resume()
+{
+	if (status == IEvent<Args...>::EventStatus::Paused)
+		status = IEvent<Args...>::EventStatus::Active;
+}
+
+template <typename ... Args>
+EventStatus evSingleEvent<Args...>::GetStatus() const
+{
+	return status;
 }
 
 /*
@@ -83,7 +121,7 @@ template<typename... Args>
 class evBroadcastEvent : public IEvent<Args...>
 {
 public:
-	// Adds a function to the event's subscribers and returns its subscription ID.
+	// Adds a function to the event's subscribers and returns its subscription ID. Also sets event to active
 	int Add(std::function<void(Args...)> f);
 
 	// Checks if the event has any functions bound to it.
@@ -91,6 +129,15 @@ public:
 
 	// Unbinds all functions currently subscribed to the event.
 	void Unbind() override;
+
+	// Pauses the event. Will not call the subscribers
+	void Pause() override;
+	
+	// Unpauses the event. Will call the subscribers after this is called
+	void Resume() override;
+
+	// Get current status of the event
+	EventStatus GetStatus() const override;
 
 	// Removes a specific subscriber by its subscription ID.
 	bool Remove(int id);
@@ -104,6 +151,7 @@ public:
 private:
 	int nextID = 0;
 	std::unordered_map<int, std::function<void(Args...)>> funcs;
+	EventStatus status = EventStatus::ES_UNBOUND;
 };
 
 // Definitions
@@ -113,6 +161,7 @@ int evBroadcastEvent<Args...>::Add(std::function<void(Args...)> f)
 	const int id = nextID;
 	funcs[id] = f;
 	nextID++;
+	status = EventStatus::ES_ACTIVE;
 	return id;
 }
 
@@ -121,7 +170,7 @@ void evBroadcastEvent<Args...>::Broadcast(Args... args)
 {
 	for (std::pair<const int,std::function<void(Args...)>>& func : funcs)
 	{
-		if (IsBound())
+		if (IsBound() && status == EventStatus::ES_ACTIVE)
 		{
 			func.second(args...);
 		}
@@ -133,7 +182,8 @@ void evBroadcastEvent<Args...>::BroadcastUnchecked(Args... args)
 {
 	for (std::pair<const int,std::function<void(Args...)>>& func : funcs)
 	{
-		func.second(args...);
+		if(status == EventStatus::ES_ACTIVE)
+			func.second(args...);
 	}
 }
 
@@ -148,6 +198,27 @@ void evBroadcastEvent<Args...>::Unbind()
 {
 	funcs.clear();
 	nextID = 0;
+	status = EventStatus::ES_UNBOUND;
+}
+
+template <typename ... Args>
+void evBroadcastEvent<Args...>::Pause()
+{
+	if (status == IEvent<Args...>::EventStatus::Active)
+		status = IEvent<Args...>::EventStatus::Paused;
+}
+
+template <typename ... Args>
+void evBroadcastEvent<Args...>::Resume()
+{
+	if (status == IEvent<Args...>::EventStatus::Paused)
+		status = IEvent<Args...>::EventStatus::Active;
+}
+
+template <typename ... Args>
+EventStatus evBroadcastEvent<Args...>::GetStatus() const
+{
+	return status;
 }
 
 template <typename ... Args>
